@@ -26,7 +26,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          xcode_version="$(xcodebuild -version | awk '/^Xcode / { print $2; exit }')"
+          xcode_info="$(xcodebuild -version)"
+          xcode_version="$(awk '/^Xcode / { print $2; exit }' <<< "$xcode_info")"
           echo "Using Xcode $xcode_version"
           [[ "$xcode_version" == 27.* ]]
 

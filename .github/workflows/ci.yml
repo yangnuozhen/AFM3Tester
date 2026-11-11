@@ -219,10 +219,11 @@ jobs:
           for app in /Applications/Xcode*.app; do
             developer_dir="$app/Contents/Developer"
             [[ -x "$developer_dir/usr/bin/xcodebuild" ]] || continue
-            if ! version="$(DEVELOPER_DIR="$developer_dir" xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}')"; then
+            if ! xcode_info="$(DEVELOPER_DIR="$developer_dir" xcodebuild -version 2>/dev/null)"; then
               echo "::warning::Ignoring unusable Xcode installation at $app."
               continue
             fi
+            version="$(awk '/^Xcode /{print $2; exit}' <<< "$xcode_info")"
             [[ -n "$version" ]] || continue
             echo "Found Xcode $version at $app"
             if [[ -z "$selected_developer_dir" ]] || version_greater_than "$version" "$selected_version"; then
@@ -233,7 +234,8 @@ jobs:
 
           if [[ -z "$selected_developer_dir" ]] && command -v xcodebuild >/dev/null 2>&1; then
             selected_developer_dir="$(xcode-select -p)"
-            selected_version="$(DEVELOPER_DIR="$selected_developer_dir" xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}' || true)"
+            xcode_info="$(DEVELOPER_DIR="$selected_developer_dir" xcodebuild -version 2>/dev/null || true)"
+            selected_version="$(awk '/^Xcode /{print $2; exit}' <<< "$xcode_info")"
             if [[ -z "$selected_version" ]]; then
               selected_developer_dir=""
             fi
